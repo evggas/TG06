@@ -12,6 +12,7 @@ from config import TOKEN
 import sqlite3
 import aiohttp
 import logging
+import requests
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -72,9 +73,27 @@ async def registration(message: Message):
        conn.commit()
        await message.answer("Вы успешно зарегистрированы!")
 
+
 @dp.message(F.text == "Курс валют")
 async def exchange_rates(message: Message):
-   
+    url = "<https://v6.exchangerate-api.com/v6/bddec7e0ec531b0967ba7047/latest/USD"
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code != 200:
+            await message.answer("Не удалось получить данные о курсе валют!")
+            return
+        usd_to_rub = data['conversion_rates']['RUB']
+        eur_to_usd = data['conversion_rates']['EUR']
+
+        euro_to_rub = eur_to_usd * usd_to_rub
+
+        await message.answer(f"1 USD - {usd_to_rub:.2f}  RUB\\n"
+                             f"1 EUR - {euro_to_rub:.2f}  RUB")
+
+    except:
+        await message.answer("Произошла ошибка")
+
 
 async def main():
     await dp.start_polling(bot)
