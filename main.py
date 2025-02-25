@@ -55,8 +55,29 @@ class FinancesForm(StatesGroup):
     category3 = State()
     expenses3 = State()
 
+@dp.message(CommandStart)
+async def send_start(message: Message):
+   await message.answer("Привет! Я ваш личный финансовый помощник. Выберите одну из опций в меню:", reply_markup=keyboard)
+
+@dp.message(F.text == "Регистрация в телеграм боте")
+async def registration(message: Message):
+   telegram_id = message.from_user.id
+   name = message.from_user.full_name
+   cursor.execute('''SELECT * FROM users WHERE telegram_id = ?''', (telegram_id,))
+   user = cursor.fetchone()
+   if user:
+       await message.answer("Вы уже зарегистрированы!")
+   else:
+       cursor.execute('''INSERT INTO users (telegram_id, name) VALUES (?, ?)''', (telegram_id, name))
+       conn.commit()
+       await message.answer("Вы успешно зарегистрированы!")
+
+@dp.message(F.text == "Курс валют")
+async def exchange_rates(message: Message):
+   
+
 async def main():
-await dp.start_polling(bot)
+    await dp.start_polling(bot)
 
 if __name__ == '__main__':
-asyncio.run(main())
+    asyncio.run(main())
